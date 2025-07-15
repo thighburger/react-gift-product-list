@@ -3,8 +3,9 @@ import { colors } from '../styles/colors'
 import { spacing } from '../styles/spacing'
 import { typography } from '../styles/typography'
 import { useState, useEffect } from 'react';
+import { fetchProductRanking } from '../services/productService';
 
-function usePersistentState(key, defaultValue) {
+function usePersistentState(key: string, defaultValue: string) {
   const [state, setState] = useState(() => {
     return localStorage.getItem(key) || defaultValue;
   });
@@ -13,20 +14,20 @@ function usePersistentState(key, defaultValue) {
     localStorage.setItem(key, state);
   }, [key, state]);
 
-  return [state, setState];
+  return [state, setState] as const;
 }
 
-const peopleTab= [
-  { label: '전체', value: 'all' ,icon: 'ALL' },
-  { label: '여성', value: 'female', icon: '👩' },
-  { label: '남성', value: 'male', icon: '👨' },
-  { label: '청소년이', value: 'teen' , icon: '🧑' },
+const peopleTab = [
+  { label: '전체', value: 'ALL' ,icon: 'ALL' },
+  { label: '여성', value: 'FEMALE', icon: '👩' },
+  { label: '남성', value: 'MALE', icon: '👨' },
+  { label: '청소년', value: 'TEEN' , icon: '🧑' },
 ]
 
 const wantedTab = [
-    {label: '받고 싶어한', value: 'wanted'},
-    {label: '많이 선물한', value: 'gifted'},
-    {label: '위시로 받은', value: 'wished'},
+    {label: '많이 찜한', value: 'MANY_WISH'},
+    {label: '많이 받은', value: 'MANY_RECEIVE'},
+    {label: '많이 찜하고 받은', value: 'MANY_WISH_RECEIVE'},
 ]
 const containerStyle = css({
   display: 'flex',
@@ -70,9 +71,53 @@ const wantedTabStyle = css({
   ...typography.body2Regular,
 });
 
-const RankingTabs = () => {
-  const [selected, setSelected] = usePersistentState('rankingTab', 'female');
-  const [selectedWantedTab, setSelectedWantedTab] = usePersistentState('wantedTab', 'wanted');
+interface Product {
+  id: number;
+  name: string;
+  price: {
+    basicPrice: number;
+    sellingPrice: number;
+    discountRate: number;
+  };
+  imageURL: string;
+  brandInfo: {
+    id: number;
+    name: string;
+    imageURL: string;
+  };
+}
+
+interface RankingTabsProps {
+  onDataChange: (products: Product[]) => void;
+}
+
+const RankingTabs = ({ onDataChange }: RankingTabsProps) => {
+  const [selected, setSelected] = usePersistentState('rankingTab', 'FEMALE');
+  const [selectedWantedTab, setSelectedWantedTab] = usePersistentState('wantedTab', 'MANY_WISH');
+
+  // API 호출 함수
+  const fetchRankingData = async (targetType: string, rankType: string) => {
+    try {
+      const products = await fetchProductRanking(targetType, rankType);
+      onDataChange(products);
+    } catch (error) {
+      console.error('랭킹 데이터를 불러오는데 실패했습니다:', error);
+      onDataChange([]); // 에러 시 빈 배열 전달
+    }
+  };
+
+  // 탭 변경 시 API 호출
+  useEffect(() => {
+    fetchRankingData(selected, selectedWantedTab);
+  }, [selected, selectedWantedTab]);
+
+  const handleTargetTabChange = (value: string) => {
+    setSelected(value);
+  };
+
+  const handleRankTabChange = (value: string) => {
+    setSelectedWantedTab(value);
+  };
 
   return (
     <>
@@ -86,7 +131,7 @@ const RankingTabs = () => {
         {peopleTab.map(tab => (
           <button
             key={tab.value}
-            onClick={() => setSelected(tab.value)}
+            onClick={() => handleTargetTabChange(tab.value)}
             css={tabButtonStyle(selected === tab.value)}
           >
             <span css={iconStyle}>{tab.icon}</span>
@@ -99,7 +144,7 @@ const RankingTabs = () => {
             <button
               key={tab.value}
               css={tabButtonStyle(selectedWantedTab === tab.value)}
-              onClick={() => setSelectedWantedTab(tab.value)}
+              onClick={() => handleRankTabChange(tab.value)}
             >
               {tab.label}
             </button>

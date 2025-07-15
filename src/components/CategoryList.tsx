@@ -50,9 +50,9 @@ const spinnerStyle = css({
 const categoryUrl = 'http://localhost:3000/api/themes';
 
 const CategoryList = () => {
-  const [categoryData, setCategoryData] = useState([]); // 상태로 categoryData 관리
+  const [categoryData, setCategoryData] = useState<any[]>([]); // 상태로 categoryData 관리
   const [loading, setLoading] = useState(true); // 로딩 상태 추가
-  const [error, setError] = useState(null); // 에러 상태 추가
+  const [error, setError] = useState<any>(null); // 에러 상태 추가
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,7 +70,7 @@ const CategoryList = () => {
         } else {
           throw new Error('API에서 올바른 데이터를 반환하지 않았습니다.');
         }
-      } catch (err) {
+      } catch (err: any) {
         setError(err.message);
       } finally {
         setLoading(false);
