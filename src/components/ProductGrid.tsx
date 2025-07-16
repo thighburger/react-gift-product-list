@@ -5,6 +5,7 @@ import { colors } from '../styles/colors'
 import { spacing } from '../styles/spacing'
 import { typography } from '../styles/typography'
 import { useAuth } from '@/contexts/AuthContext'
+import { type Product } from '../services/productService'
 
 const sectionStyle = css({ margin: `${spacing.spacing8} 0` })
 const gridStyle = css({
@@ -80,22 +81,6 @@ const spinnerStyle = css({
     '100%': { transform: 'rotate(360deg)' },
   },
 });
-
-interface Product {
-  id: number;
-  name: string;
-  price: {
-    basicPrice: number;
-    sellingPrice: number;
-    discountRate: number;
-  };
-  imageURL: string;
-  brandInfo: {
-    id: number;
-    name: string;
-    imageURL: string;
-  };
-}
 
 interface ProductGridProps {
   products: Product[];
