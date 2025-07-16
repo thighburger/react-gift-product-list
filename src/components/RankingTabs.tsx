@@ -2,20 +2,9 @@ import { css } from '@emotion/react'
 import { colors } from '../styles/colors'
 import { spacing } from '../styles/spacing'
 import { typography } from '../styles/typography'
-import { useState, useEffect } from 'react';
-import { fetchProductRanking } from '../services/productService';
-
-function usePersistentState(key: string, defaultValue: string) {
-  const [state, setState] = useState(() => {
-    return localStorage.getItem(key) || defaultValue;
-  });
-
-  useEffect(() => {
-    localStorage.setItem(key, state);
-  }, [key, state]);
-
-  return [state, setState] as const;
-}
+import { useEffect } from 'react';
+import { fetchProductRanking, type Product } from '../services/productService';
+import { usePersistentState } from '../hooks/usePersistentState';
 
 const peopleTab = [
   { label: '전체', value: 'ALL' ,icon: 'ALL' },
@@ -70,22 +59,6 @@ const wantedTabStyle = css({
   marginTop: spacing.spacing4,
   ...typography.body2Regular,
 });
-
-interface Product {
-  id: number;
-  name: string;
-  price: {
-    basicPrice: number;
-    sellingPrice: number;
-    discountRate: number;
-  };
-  imageURL: string;
-  brandInfo: {
-    id: number;
-    name: string;
-    imageURL: string;
-  };
-}
 
 interface RankingTabsProps {
   onDataChange: (products: Product[]) => void;
