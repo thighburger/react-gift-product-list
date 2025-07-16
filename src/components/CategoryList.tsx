@@ -4,6 +4,18 @@ import { spacing } from '../styles/spacing';
 import { typography } from '../styles/typography';
 import { useState, useEffect } from 'react';
 
+// 카테고리 아이템 타입 정의
+interface CategoryItem {
+  themeId: number;
+  name: string;
+  image: string;
+}
+
+// API 응답 타입 정의
+interface CategoryResponse {
+  data: CategoryItem[];
+}
+
 const sectionStyle = css({
   background: colors.backgroundDefault,
   borderRadius: 16,
@@ -50,9 +62,9 @@ const spinnerStyle = css({
 const categoryUrl = 'http://localhost:3000/api/themes';
 
 const CategoryList = () => {
-  const [categoryData, setCategoryData] = useState<any[]>([]); // 상태로 categoryData 관리
+  const [categoryData, setCategoryData] = useState<CategoryItem[]>([]); // 상태로 categoryData 관리
   const [loading, setLoading] = useState(true); // 로딩 상태 추가
-  const [error, setError] = useState<any>(null); // 에러 상태 추가
+  const [error, setError] = useState<string | null>(null); // 에러 상태 추가
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,7 +74,7 @@ const CategoryList = () => {
         if (!response.ok) {
           throw new Error('데이터를 가져오는 데 실패했습니다.');
         }
-        const result = await response.json();
+        const result: CategoryResponse = await response.json();
 
         // 응답 데이터에서 data 배열만 추출
         if (Array.isArray(result.data)) {
@@ -70,8 +82,9 @@ const CategoryList = () => {
         } else {
           throw new Error('API에서 올바른 데이터를 반환하지 않았습니다.');
         }
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
