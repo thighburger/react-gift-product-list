@@ -87,6 +87,8 @@ interface ProductGridProps {
   loading?: boolean;
 }
 
+const INITIAL_DISPLAY_COUNT = 6;
+
 const ProductGrid = ({ products, loading = false }: ProductGridProps) => {
   const [showAll, setShowAll] = useState(false)
   const navigate = useNavigate()
@@ -123,7 +125,7 @@ const ProductGrid = ({ products, loading = false }: ProductGridProps) => {
     )
   }
 
-  const displayProducts = showAll ? products : products.slice(0, 6)
+  const displayProducts = showAll ? products : products.slice(0, INITIAL_DISPLAY_COUNT)
 
   return (
     <section css={sectionStyle}>
@@ -148,7 +150,7 @@ const ProductGrid = ({ products, loading = false }: ProductGridProps) => {
           </div>
         ))}
       </div>
-      {products.length > 6 && (
+      {products.length > INITIAL_DISPLAY_COUNT && (
         <div css={buttonWrapStyle}>
           <button
             onClick={() => setShowAll(v => !v)}
