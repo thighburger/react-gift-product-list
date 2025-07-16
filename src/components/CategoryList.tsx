@@ -3,7 +3,8 @@ import { colors } from '../styles/colors';
 import { spacing } from '../styles/spacing';
 import { typography } from '../styles/typography';
 import { useState, useEffect } from 'react';
-import { fetchCategories, type CategoryItem } from '../services/categoryService';
+import { fetchCategories } from '../api/categoryApi';
+import type { CategoryItem } from '../types/category';
 
 const sectionStyle = css({
   background: colors.backgroundDefault,

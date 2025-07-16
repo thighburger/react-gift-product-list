@@ -1,14 +1,4 @@
-// 카테고리 아이템 타입 정의
-export interface CategoryItem {
-  themeId: number;
-  name: string;
-  image: string;
-}
-
-// API 응답 타입 정의
-interface CategoryResponse {
-  data: CategoryItem[];
-}
+import type { CategoryItem, CategoryResponse } from '../types/category';
 
 // 카테고리 데이터 가져오기
 export const fetchCategories = async (): Promise<CategoryItem[]> => {

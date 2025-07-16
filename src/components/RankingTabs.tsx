@@ -3,7 +3,8 @@ import { colors } from '../styles/colors'
 import { spacing } from '../styles/spacing'
 import { typography } from '../styles/typography'
 import { useEffect } from 'react';
-import { fetchProductRanking, type Product } from '../services/productService';
+import { fetchProductRanking } from '../api/productApi';
+import type { Product } from '../types/product';
 import { usePersistentState } from '../hooks/usePersistentState';
 
 const peopleTab = [

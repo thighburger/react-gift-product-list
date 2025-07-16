@@ -6,7 +6,7 @@ import CategoryList from '@/components/CategoryList'
 import NoticeBanner from '@/components/NoticeBanner'
 import RankingTabs from '@/components/RankingTabs'
 import ProductGrid from '@/components/ProductGrid'
-import { type Product } from '@/services/productService'
+import { type Product } from '@/types/product'
 
 function Home() {
   const [products, setProducts] = useState<Product[]>([])

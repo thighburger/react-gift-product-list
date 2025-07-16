@@ -1,22 +1,4 @@
-export interface Product {
-  id: number;
-  name: string;
-  price: {
-    basicPrice: number;
-    sellingPrice: number;
-    discountRate: number;
-  };
-  imageURL: string;
-  brandInfo: {
-    id: number;
-    name: string;
-    imageURL: string;
-  };
-}
-
-interface ProductRankingResponse {
-  data: Product[];
-}
+import type { Product, ProductRankingResponse } from '../types/product';
 
 export const fetchProductRanking = async (
   targetType: string = 'ALL',

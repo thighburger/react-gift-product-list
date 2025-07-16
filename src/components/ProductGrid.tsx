@@ -5,7 +5,7 @@ import { colors } from '../styles/colors'
 import { spacing } from '../styles/spacing'
 import { typography } from '../styles/typography'
 import { useAuth } from '@/contexts/AuthContext'
-import { type Product } from '../services/productService'
+import { type Product } from '../types/product'
 
 const sectionStyle = css({ margin: `${spacing.spacing8} 0` })
 const gridStyle = css({
