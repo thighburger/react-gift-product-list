@@ -8,13 +8,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import GlobalStyle from '@/styles/GlobalStyle'
 import { useInput, validateEmail, validatePassword } from '@/hooks/useInput'
 
-
-const wrapperStyle = css({
-  maxWidth: 720,
-  margin: '0 auto',
-  alignItems: 'center'
-})
-
 const formStyle = css({
   width: 360,
   display: 'flex',
@@ -122,7 +115,7 @@ const LoginPage = () => {
     !!passwordError
 
   return (
-    <div css={wrapperStyle}>
+    <div>
       <GlobalStyle />
       <Header onBack={handleBack} />
 

@@ -6,40 +6,25 @@ import CategoryList from '@/components/CategoryList'
 import NoticeBanner from '@/components/NoticeBanner'
 import RankingTabs from '@/components/RankingTabs'
 import ProductGrid from '@/components/ProductGrid'
-
-interface Product {
-  id: number;
-  name: string;
-  price: {
-    basicPrice: number;
-    sellingPrice: number;
-    discountRate: number;
-  };
-  imageURL: string;
-  brandInfo: {
-    id: number;
-    name: string;
-    imageURL: string;
-  };
-}
+import { type Product } from '@/services/productService'
 
 function Home() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
-  const handleDataChange = (newProducts: Product[]) => {
+  const handleRankingProductsChange = (newProducts: Product[]) => {
     setProducts(newProducts)
     setLoading(false)
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' , alignItems: 'center'}}>
+    <div>
       <GlobalStyle />
       <Header />
       <FriendSelector />
       <CategoryList />
       <NoticeBanner />
-      <RankingTabs onDataChange={handleDataChange} />
+      <RankingTabs onDataChange={handleRankingProductsChange} />
       <ProductGrid products={products} loading={loading} />
     </div>
   )
