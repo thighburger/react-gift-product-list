@@ -2,15 +2,23 @@ import { css } from '@emotion/react'
 import { colors } from '../styles/colors'
 import { spacing } from '../styles/spacing'
 import { typography } from '../styles/typography'
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react';
+import { fetchProductRanking } from '../api/productApi';
+import type { Product } from '../types/product';
+import { usePersistentState } from '../hooks/usePersistentState';
 
-const tabs = [
-  { label: '전체', value: 'all' ,icon: 'ALL' },
-  { label: '여성', value: 'female', icon: '👩' },
-  { label: '남성', value: 'male', icon: '👨' },
-  { label: '청소년이', value: 'teen' , icon: '🧑' },
+const peopleTab = [
+  { label: '전체', value: 'ALL' ,icon: 'ALL' },
+  { label: '여성', value: 'FEMALE', icon: '👩' },
+  { label: '남성', value: 'MALE', icon: '👨' },
+  { label: '청소년', value: 'TEEN' , icon: '🧑' },
 ]
 
+const wantedTab = [
+    {label: '많이 찜한', value: 'MANY_WISH'},
+    {label: '많이 받은', value: 'MANY_RECEIVE'},
+    {label: '많이 찜하고 받은', value: 'MANY_WISH_RECEIVE'},
+]
 const containerStyle = css({
   display: 'flex',
   gap: 0,
@@ -41,15 +49,49 @@ const tabButtonStyle = (selected: boolean) => css({
 
 const iconStyle = css({ fontSize: 15 })
 const labelStyle = css({ marginTop: spacing.spacing2 })
+const wantedTabStyle = css({
+  display: 'flex',
+  justifyContent: 'space-around',
+  alignItems: 'center',
+  borderRadius: 20,
+  padding: `${spacing.spacing2} ${spacing.spacing4}`,
+  boxShadow: '0 2px 8px rgba(33, 124, 249, 0.2)',
+  color: colors.blue700,
+  marginTop: spacing.spacing4,
+  ...typography.body2Regular,
+});
 
-const RankingTabs = () => {
-  const [selected, setSelected] = useState(() => {
-    return localStorage.getItem('rankingTab') || 'female'
-  })
+interface RankingTabsProps {
+  onDataChange: (products: Product[]) => void;
+}
 
+const RankingTabs = ({ onDataChange }: RankingTabsProps) => {
+  const [selected, setSelected] = usePersistentState('rankingTab', 'FEMALE');
+  const [selectedWantedTab, setSelectedWantedTab] = usePersistentState('wantedTab', 'MANY_WISH');
+
+  // API 호출 함수
+  const fetchRankingData = async (targetType: string, rankType: string) => {
+    try {
+      const products = await fetchProductRanking(targetType, rankType);
+      onDataChange(products);
+    } catch (error) {
+      console.error('랭킹 데이터를 불러오는데 실패했습니다:', error);
+      onDataChange([]); // 에러 시 빈 배열 전달
+    }
+  };
+
+  // 탭 변경 시 API 호출
   useEffect(() => {
-    localStorage.setItem('rankingTab', selected)
-  }, [selected])
+    fetchRankingData(selected, selectedWantedTab);
+  }, [selected, selectedWantedTab]);
+
+  const handleTargetTabChange = (value: string) => {
+    setSelected(value);
+  };
+
+  const handleRankTabChange = (value: string) => {
+    setSelectedWantedTab(value);
+  };
 
   return (
     <>
@@ -60,10 +102,10 @@ const RankingTabs = () => {
         marginBottom: spacing.spacing4,
       }}>실시간 급상승 선물랭킹</h3>
       <div css={containerStyle}>
-        {tabs.map(tab => (
+        {peopleTab.map(tab => (
           <button
             key={tab.value}
-            onClick={() => setSelected(tab.value)}
+            onClick={() => handleTargetTabChange(tab.value)}
             css={tabButtonStyle(selected === tab.value)}
           >
             <span css={iconStyle}>{tab.icon}</span>
@@ -71,8 +113,20 @@ const RankingTabs = () => {
           </button>
         ))}
       </div>
+      <div css={wantedTabStyle}>
+        {wantedTab.map(tab => (
+            <button
+              key={tab.value}
+              css={tabButtonStyle(selectedWantedTab === tab.value)}
+              onClick={() => handleRankTabChange(tab.value)}
+            >
+              {tab.label}
+            </button>
+        ))}
+      </div>
     </>
   )
 }
 
 export default RankingTabs
+
