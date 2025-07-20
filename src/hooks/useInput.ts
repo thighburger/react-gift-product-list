@@ -37,7 +37,7 @@ export function useInput(validate: (value: string) => string | null) {
 
 export const validateEmail = (email: string) => {
   if (!email) return 'ID를 입력해 주세요.'
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const emailRegex = /^[^\s@]+@kakao\.com$/
   if (!emailRegex.test(email)) return '이메일 형식이 올바르지 않습니다.'
   return null
 }
