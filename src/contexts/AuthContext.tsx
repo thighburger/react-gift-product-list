@@ -1,25 +1,25 @@
 import { createContext, useState, useContext, useEffect, useMemo, useCallback, type ReactNode } from 'react';
-
-// 사용자 정보 타입 정의
-interface User {
-  email: string;
-  nickname: string;
-}
+import { login as loginApi } from '../api/authApi';
+import type { User } from '../types/auth';
 
 // 인증 컨텍스트의 값 타입 정의
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => void;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  loading: boolean;
+  error: string | null;
 }
 
 // 초기값으로 빈 객체 생성
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
-  login: () => {},
+  login: async () => {},
   logout: () => {},
+  loading: false,
+  error: null,
 });
 
 // 컨텍스트 Provider 컴포넌트 타입 정의
@@ -28,11 +28,13 @@ interface AuthProviderProps {
 }
 
 // localStorage 키
-const USER_STORAGE_KEY = 'kakao_user';
+const USER_STORAGE_KEY = 'userInfo';
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 사용자 정보 상태
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // 인증 상태 계산 (user가 존재하면 true)
   const isAuthenticated = !!user;
@@ -51,28 +53,41 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   // 로그인 처리 (useCallback으로 메모이제이션)
-  const login = useCallback((email: string) => {
+  const login = useCallback(async (email: string, password: string) => {
+    setLoading(true);
+    setError(null);
 
-    const newUser = { email, nickname: email.split('@')[0] };
-    
-    // 사용자 정보 업데이트
-    setUser(newUser);
-    
-    // localStorage에 사용자 정보 저장
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
-
+    try {
+      const response = await loginApi({ email, password });
+      const newUser: User = {
+        email: response.data.email,
+        name: response.data.name,
+        authToken: response.data.authToken,
+      };
+      
+      // 사용자 정보 업데이트
+      setUser(newUser);
+      
+      // localStorage에 사용자 정보 저장
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '로그인에 실패했습니다.';
+      setError(errorMessage);
+      throw err; // 컴포넌트에서 에러 처리할 수 있도록 다시 throw
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   // 로그아웃 처리 (useCallback으로 메모이제이션)
   const logout = useCallback(() => {
-
     // 사용자 정보 초기화
     setUser(null);
+    setError(null);
     
     // localStorage에서 사용자 정보 삭제
     localStorage.removeItem(USER_STORAGE_KEY);
   }, []);
-
 
   // 컨텍스트 값 정의
   const value = useMemo(() => ({
@@ -80,7 +95,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isAuthenticated,
     login,
     logout,
-  }), [user, isAuthenticated, login, logout]);
+    loading,
+    error,
+  }), [user, isAuthenticated, login, logout, loading, error]);
 
   // Provider로 자식 컴포넌트 감싸기
   return (
