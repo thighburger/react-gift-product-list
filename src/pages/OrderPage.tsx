@@ -8,7 +8,8 @@ import { spacing } from '@/styles/spacing';
 import { typography } from '@/styles/typography';
 import GlobalStyle from '@/styles/GlobalStyle';
 import { useAuth } from '@/contexts/AuthContext';
-import product from '@/data/product';
+import { fetchProductSummary } from '@/api/productApi';
+import type { ProductSummary } from '@/types/product';
 import orderCardsData from '@/data/orderCard';
 import ReceiverModal from './ReceiverModal';
 
@@ -223,13 +224,16 @@ const receiverTableTd = (isFirst: boolean) => css({
 
 
 const OrderPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { productId } = useParams();
 
+  // 제품 정보 상태 추가
+  const [productData, setProductData] = useState<ProductSummary | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // react-hook-form 적용
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
     mode: 'onSubmit',
     defaultValues: {
       message: orderCardsData[0].defaultTextMessage,
@@ -237,6 +241,30 @@ const OrderPage = () => {
     },
   });
 
+  // userInfo의 name을 defaultValue로 설정
+  useEffect(() => {
+    if (user?.name) {
+      setValue('senderName', user.name);
+    }
+  }, [user, setValue]);
+
+  // 제품 정보 가져오기
+  useEffect(() => {
+    const loadProductData = async () => {
+      try {      
+        setLoading(true);
+        const data = await fetchProductSummary(Number(productId));
+        setProductData(data);
+      } catch (error) {
+        // API에서 이미 toast를 표시했으므로 홈으로 리다이렉트만 함
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProductData();
+  }, [productId, navigate]);
   
   // 가져온 orderCard.ts 데이터 사용
   const [selectedCard, setSelectedCard] = useState<OrderCard>(orderCardsData[0]);
@@ -255,7 +283,9 @@ const OrderPage = () => {
   
   // 주문하기 핸들러 (react-hook-form)
   const onSubmit = (data: { message: string; senderName: string }) => {
-    alert(`\n주문 정보:\n- 상품명: ${product.name}\n- 발신자: ${data.senderName}\n- 메시지: ${data.message}\n- 받는 사람 수: ${receivers.length}\n\n주문이 완료되었습니다!`);
+    if (!productData) return;
+    
+    alert(`\n주문 정보:\n- 상품명: ${productData.name}\n- 발신자: ${data.senderName}\n- 메시지: ${data.message}\n- 받는 사람 수: ${receivers.length}\n\n주문이 완료되었습니다!`);
     navigate('/');
   };
   
@@ -270,7 +300,20 @@ const OrderPage = () => {
 
   // 받는 사람 전체 수량 합계 계산
   const totalQuantity = receivers.reduce((sum, r) => sum + (r.quantity || 0), 0);
-  const totalPrice = product.price.sellingPrice * (totalQuantity || 1);
+  const totalPrice = productData ? productData.price * (totalQuantity || 0) : 0;
+
+  // 로딩 중이거나 제품 정보가 없는 경우
+  if (loading || !productData) {
+    return (
+      <>
+        <GlobalStyle />
+        <Header />
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          {loading ? '제품 정보를 불러오는 중...' : '제품 정보를 찾을 수 없습니다.'}
+        </div>
+      </>
+    );
+  }
   
   return (
     <>
@@ -367,14 +410,14 @@ const OrderPage = () => {
           <h2 css={sectionTitle}>상품 정보</h2>
           <div css={orderInfoContainer}>
             <img 
-              src={product.imageURL} 
-              alt={product.name} 
+              src={productData.imageURL} 
+              alt={productData.name} 
               css={orderInfoImage}
             />
             <div css={orderInfoText}>
-              <div css={css({ ...typography.body2Bold })}>BBQ</div>
-              <div css={css({ ...typography.body1Regular })}>{product.name}</div>
-              <div css={css({ ...typography.body2Bold })}>{product.price.sellingPrice.toLocaleString()}원</div>
+              <div css={css({ ...typography.body2Bold })}>{productData.brandName}</div>
+              <div css={css({ ...typography.body1Regular })}>{productData.name}</div>
+              <div css={css({ ...typography.body2Bold })}>{productData.price.toLocaleString()}원</div>
             </div>
           </div>
           
@@ -394,6 +437,7 @@ const OrderPage = () => {
         )}
 
       </div>
+
     </>
   );
 };
