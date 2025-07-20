@@ -2,6 +2,7 @@ import { css } from '@emotion/react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 import Header from '@/components/Header';
 import { colors } from '@/styles/colors';
 import { spacing } from '@/styles/spacing';
@@ -9,7 +10,9 @@ import { typography } from '@/styles/typography';
 import GlobalStyle from '@/styles/GlobalStyle';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchProductSummary } from '@/api/productApi';
+import { createOrder } from '@/api/orderApi';
 import type { ProductSummary } from '@/types/product';
+import type { OrderRequest } from '@/types/order';
 import orderCardsData from '@/data/orderCard';
 import ReceiverModal from './ReceiverModal';
 
@@ -279,14 +282,46 @@ const OrderPage = () => {
   // 카드 선택 핸들러
   const handleCardSelect = (card: OrderCard) => {
     setSelectedCard(card);
+    // 카드 선택 시 해당 카드의 기본 메시지로 변경
+    setValue('message', card.defaultTextMessage);
   };
   
   // 주문하기 핸들러 (react-hook-form)
-  const onSubmit = (data: { message: string; senderName: string }) => {
-    if (!productData) return;
+  const onSubmit = async (data: { message: string; senderName: string }) => {
+    if (!productData || !user?.authToken) return;
     
-    alert(`\n주문 정보:\n- 상품명: ${productData.name}\n- 발신자: ${data.senderName}\n- 메시지: ${data.message}\n- 받는 사람 수: ${receivers.length}\n\n주문이 완료되었습니다!`);
-    navigate('/');
+    // 받는 사람이 없으면 경고
+    if (receivers.length === 0) {
+      toast.error('받는 사람을 추가해주세요');
+      return;
+    }
+
+    try {
+      // 주문 요청 데이터 생성
+      const orderData: OrderRequest = {
+        productId: productData.id,
+        message: data.message,
+        messageCardId: selectedCard.id.toString(),
+        ordererName: data.senderName,
+        receivers: receivers.map(receiver => ({
+          name: receiver.receiverName,
+          phoneNumber: receiver.phoneNumber,
+          quantity: receiver.quantity
+        }))
+      };
+
+      // 주문 API 호출
+      await createOrder(orderData, user.authToken);
+      
+      // 성공 시 홈으로 이동
+      navigate('/');
+    } catch (error) {
+      if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+        // 401 에러의 경우 로그인 페이지로 이동
+        navigate('/login', { state: { from: `/order/${productId}` } });
+      }
+      // 기타 에러의 경우 toast는 이미 API에서 표시됨
+    }
   };
   
 
