@@ -1,3 +1,4 @@
+import { toast } from 'react-toastify';
 import type { LoginRequest, LoginResponse } from '../types/auth';
 
 export const login = async (loginData: LoginRequest): Promise<LoginResponse> => {
@@ -9,10 +10,12 @@ export const login = async (loginData: LoginRequest): Promise<LoginResponse> => 
       },
       body: JSON.stringify(loginData),
     });
-
-    if (!response.ok) {
+   
+    if(response.status < 500 && response.status >= 400) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || '로그인에 실패했습니다.');
+      const errorMessage = errorData.message || '로그인에 실패했습니다.';
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
     }
 
     const result: LoginResponse = await response.json();
