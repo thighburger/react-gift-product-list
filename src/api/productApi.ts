@@ -1,22 +1,21 @@
-import type { Product, ProductRankingResponse } from '../types/product';
+import { apiRequest } from './apiClient';
+import type { Product, ProductRankingResponse, ProductSummary, ProductSummaryResponse } from '../types/product';
 
 export const fetchProductRanking = async (
   targetType: string = 'ALL',
   rankType: string = 'MANY_WISH'
 ): Promise<Product[]> => {
-  try {
-    const response = await fetch(
-      `http://localhost:3000/api/products/ranking?targetType=${targetType}&rankType=${rankType}`
-    );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch product ranking');
-    }
-    
-    const result: ProductRankingResponse = await response.json();
-    return result.data;
-  } catch (error) {
-    console.error('Error fetching product ranking:', error);
-    throw error;
-  }
+  const result = await apiRequest<ProductRankingResponse>(
+    `/products/ranking?targetType=${targetType}&rankType=${rankType}`,
+    { method: 'GET' }
+  );
+  return result.data;
+};
+
+export const fetchProductSummary = async (productId: number): Promise<ProductSummary> => {
+  const result = await apiRequest<ProductSummaryResponse>(
+    `/products/${productId}/summary`,
+    { method: 'GET' }
+  );
+  return result.data;
 };

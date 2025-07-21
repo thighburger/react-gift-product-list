@@ -7,7 +7,7 @@ function MyPage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   
-  const nickname = user?.nickname || ''
+  const nickname = user?.name || ''
   const email = user?.email || ''
 
   return (

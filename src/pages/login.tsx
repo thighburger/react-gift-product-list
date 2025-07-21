@@ -87,7 +87,7 @@ const LoginPage = () => {
     if (isAuthenticated) {
       navigate('/', { replace: true })
     }
-  }, [])
+  }, [navigate, isAuthenticated])
 
 
   // 뒤로가기 버튼 클릭
@@ -158,6 +158,7 @@ const LoginPage = () => {
         </button>
       </form>
     </div>
+    
   )
 }
 

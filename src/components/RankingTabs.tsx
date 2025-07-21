@@ -1,4 +1,5 @@
 import { css } from '@emotion/react'
+import { toast } from 'react-toastify';
 import { colors } from '../styles/colors'
 import { spacing } from '../styles/spacing'
 import { typography } from '../styles/typography'
@@ -76,6 +77,8 @@ const RankingTabs = ({ onDataChange }: RankingTabsProps) => {
       onDataChange(products);
     } catch (error) {
       console.error('랭킹 데이터를 불러오는데 실패했습니다:', error);
+      const errorMessage = error instanceof Error ? error.message : '랭킹 데이터를 불러오는데 실패했습니다.';
+      toast.error(errorMessage);
       onDataChange([]); // 에러 시 빈 배열 전달
     }
   };

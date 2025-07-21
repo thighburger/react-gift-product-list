@@ -2,13 +2,17 @@ import { css } from '@emotion/react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 import Header from '@/components/Header';
 import { colors } from '@/styles/colors';
 import { spacing } from '@/styles/spacing';
 import { typography } from '@/styles/typography';
 import GlobalStyle from '@/styles/GlobalStyle';
 import { useAuth } from '@/contexts/AuthContext';
-import product from '@/data/product';
+import { fetchProductSummary } from '@/api/productApi';
+import { createOrder } from '@/api/orderApi';
+import type { ProductSummary } from '@/types/product';
+import type { OrderRequest } from '@/types/order';
 import orderCardsData from '@/data/orderCard';
 import ReceiverModal from './ReceiverModal';
 
@@ -223,20 +227,42 @@ const receiverTableTd = (isFirst: boolean) => css({
 
 
 const OrderPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { productId } = useParams();
 
+  // 제품 정보 상태 추가
+  const [productData, setProductData] = useState<ProductSummary | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // react-hook-form 적용
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
     mode: 'onSubmit',
     defaultValues: {
       message: orderCardsData[0].defaultTextMessage,
-      senderName: '',
+      senderName: user?.name || '',
     },
   });
 
+  // 제품 정보 가져오기
+  useEffect(() => {
+    const loadProductData = async () => {
+      try {      
+        setLoading(true);
+        const data = await fetchProductSummary(Number(productId));
+        setProductData(data);
+      } catch (error) {
+        // 에러 토스트 표시 후 홈으로 리다이렉트
+        const errorMessage = error instanceof Error ? error.message : '상품 정보를 불러오는데 실패했습니다.';
+        toast.error(errorMessage);
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProductData();
+  }, [productId, navigate]);
   
   // 가져온 orderCard.ts 데이터 사용
   const [selectedCard, setSelectedCard] = useState<OrderCard>(orderCardsData[0]);
@@ -251,12 +277,52 @@ const OrderPage = () => {
   // 카드 선택 핸들러
   const handleCardSelect = (card: OrderCard) => {
     setSelectedCard(card);
+    // 카드 선택 시 해당 카드의 기본 메시지로 변경
+    setValue('message', card.defaultTextMessage);
   };
   
   // 주문하기 핸들러 (react-hook-form)
-  const onSubmit = (data: { message: string; senderName: string }) => {
-    alert(`\n주문 정보:\n- 상품명: ${product.name}\n- 발신자: ${data.senderName}\n- 메시지: ${data.message}\n- 받는 사람 수: ${receivers.length}\n\n주문이 완료되었습니다!`);
-    navigate('/');
+  const onSubmit = async (data: { message: string; senderName: string }) => {
+    if (!productData || !user?.authToken) return;
+    
+    // 받는 사람이 없으면 경고
+    if (receivers.length === 0) {
+      toast.error('받는 사람을 추가해주세요');
+      return;
+    }
+
+    try {
+      // 주문 요청 데이터 생성
+      const orderData: OrderRequest = {
+        productId: productData.id,
+        message: data.message,
+        messageCardId: selectedCard.id.toString(),
+        ordererName: data.senderName,
+        receivers: receivers.map(receiver => ({
+          name: receiver.receiverName,
+          phoneNumber: receiver.phoneNumber,
+          quantity: receiver.quantity
+        }))
+      };
+
+      // 주문 API 호출
+      await createOrder(orderData, user.authToken);
+      
+      // 주문 성공 토스트
+      toast.success('주문이 성공적으로 완료되었습니다!');
+      
+      // 성공 시 홈으로 이동
+      navigate('/');
+    } catch (error) {
+      if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+        // 401 에러의 경우 로그인 페이지로 이동
+        navigate('/login', { state: { from: `/order/${productId}` } });
+      } else {
+        // 기타 에러의 경우 에러 토스트 표시
+        const errorMessage = error instanceof Error ? error.message : '주문 처리 중 오류가 발생했습니다.';
+        toast.error(errorMessage);
+      }
+    }
   };
   
 
@@ -270,7 +336,20 @@ const OrderPage = () => {
 
   // 받는 사람 전체 수량 합계 계산
   const totalQuantity = receivers.reduce((sum, r) => sum + (r.quantity || 0), 0);
-  const totalPrice = product.price.sellingPrice * (totalQuantity || 1);
+  const totalPrice = productData ? productData.price * (totalQuantity || 0) : 0;
+
+  // 로딩 중이거나 제품 정보가 없는 경우
+  if (loading || !productData) {
+    return (
+      <>
+        <GlobalStyle />
+        <Header />
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          {loading ? '제품 정보를 불러오는 중...' : '제품 정보를 찾을 수 없습니다.'}
+        </div>
+      </>
+    );
+  }
   
   return (
     <>
@@ -367,14 +446,14 @@ const OrderPage = () => {
           <h2 css={sectionTitle}>상품 정보</h2>
           <div css={orderInfoContainer}>
             <img 
-              src={product.imageURL} 
-              alt={product.name} 
+              src={productData.imageURL} 
+              alt={productData.name} 
               css={orderInfoImage}
             />
             <div css={orderInfoText}>
-              <div css={css({ ...typography.body2Bold })}>BBQ</div>
-              <div css={css({ ...typography.body1Regular })}>{product.name}</div>
-              <div css={css({ ...typography.body2Bold })}>{product.price.sellingPrice.toLocaleString()}원</div>
+              <div css={css({ ...typography.body2Bold })}>{productData.brandName}</div>
+              <div css={css({ ...typography.body1Regular })}>{productData.name}</div>
+              <div css={css({ ...typography.body2Bold })}>{productData.price.toLocaleString()}원</div>
             </div>
           </div>
           
@@ -394,6 +473,7 @@ const OrderPage = () => {
         )}
 
       </div>
+
     </>
   );
 };
