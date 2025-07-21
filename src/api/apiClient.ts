@@ -72,7 +72,6 @@ export const apiRequest = async <T>(
     
     return result;
   } catch (error) {
-    console.error(`API Error [${method} ${url}]:`, error);
     throw error;
   }
 };
