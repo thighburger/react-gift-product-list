@@ -1,4 +1,5 @@
 import { css } from '@emotion/react';
+import { toast } from 'react-toastify';
 import { colors } from '../styles/colors';
 import { spacing } from '../styles/spacing';
 import { typography } from '../styles/typography';
@@ -63,6 +64,7 @@ const CategoryList = () => {
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
         setError(errorMessage);
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }

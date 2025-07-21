@@ -1,4 +1,5 @@
 import { createContext, useState, useContext, useEffect, useMemo, useCallback, type ReactNode } from 'react';
+import { toast } from 'react-toastify';
 import { login as loginApi } from '../api/authApi';
 import type { User } from '../types/auth';
 
@@ -70,9 +71,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       // localStorage에 사용자 정보 저장
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
+      
+      // 로그인 성공 토스트
+      toast.success('로그인이 완료되었습니다!');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '로그인에 실패했습니다.';
       setError(errorMessage);
+      
+      // 로그인 실패 토스트
+      toast.error(errorMessage);
+      
       throw err; // 컴포넌트에서 에러 처리할 수 있도록 다시 throw
     } finally {
       setLoading(false);

@@ -259,7 +259,9 @@ const OrderPage = () => {
         const data = await fetchProductSummary(Number(productId));
         setProductData(data);
       } catch (error) {
-        // API에서 이미 toast를 표시했으므로 홈으로 리다이렉트만 함
+        // 에러 토스트 표시 후 홈으로 리다이렉트
+        const errorMessage = error instanceof Error ? error.message : '상품 정보를 불러오는데 실패했습니다.';
+        toast.error(errorMessage);
         navigate('/');
       } finally {
         setLoading(false);
@@ -313,14 +315,20 @@ const OrderPage = () => {
       // 주문 API 호출
       await createOrder(orderData, user.authToken);
       
+      // 주문 성공 토스트
+      toast.success('주문이 성공적으로 완료되었습니다!');
+      
       // 성공 시 홈으로 이동
       navigate('/');
     } catch (error) {
       if (error instanceof Error && error.message === 'UNAUTHORIZED') {
         // 401 에러의 경우 로그인 페이지로 이동
         navigate('/login', { state: { from: `/order/${productId}` } });
+      } else {
+        // 기타 에러의 경우 에러 토스트 표시
+        const errorMessage = error instanceof Error ? error.message : '주문 처리 중 오류가 발생했습니다.';
+        toast.error(errorMessage);
       }
-      // 기타 에러의 경우 toast는 이미 API에서 표시됨
     }
   };
   

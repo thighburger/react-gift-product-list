@@ -15,10 +15,7 @@ export const fetchProductRanking = async (
 export const fetchProductSummary = async (productId: number): Promise<ProductSummary> => {
   const result = await apiRequest<ProductSummaryResponse>(
     `/products/${productId}/summary`,
-    { 
-      method: 'GET',
-      showErrorToast: true 
-    }
+    { method: 'GET' }
   );
   return result.data;
 };
