@@ -240,16 +240,9 @@ const OrderPage = () => {
     mode: 'onSubmit',
     defaultValues: {
       message: orderCardsData[0].defaultTextMessage,
-      senderName: '',
+      senderName: user?.name || '',
     },
   });
-
-  // userInfo의 name을 defaultValue로 설정
-  useEffect(() => {
-    if (user?.name) {
-      setValue('senderName', user.name);
-    }
-  }, [user, setValue]);
 
   // 제품 정보 가져오기
   useEffect(() => {
