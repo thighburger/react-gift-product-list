@@ -15,7 +15,7 @@ interface ApiRequestOptions {
 const handleResponse = async <T>(response: Response, showErrorToast: boolean = true): Promise<T> => {
   // 4XX 클라이언트 에러 처리
   if (response.status >= 400 && response.status < 500) {
-    const errorData = await response.json().catch(() => ({}));
+    const errorData = await response.json();
     const errorMessage = errorData.message || '요청 처리 중 오류가 발생했습니다.';
     
     if (showErrorToast) {
