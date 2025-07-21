@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect, useMemo, useCallback, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { login as loginApi } from '../api/authApi';
+import { STORAGE_KEYS } from '../constants/storage';
 import type { User } from '../types/auth';
 
 // 인증 컨텍스트의 값 타입 정의
@@ -28,9 +29,6 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// localStorage 키
-const USER_STORAGE_KEY = 'userInfo';
-
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 사용자 정보 상태
   const [user, setUser] = useState<User | null>(null);
@@ -42,13 +40,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // 컴포넌트 마운트 시 localStorage에서 사용자 정보 불러오기
   useEffect(() => {
-    const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+    const storedUser = localStorage.getItem(STORAGE_KEYS.USER_INFO);
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
       } catch (e) {
         // 잘못된 JSON 형식일 경우 localStorage 데이터 삭제
-        localStorage.removeItem(USER_STORAGE_KEY);
+        localStorage.removeItem(STORAGE_KEYS.USER_INFO);
       }
     }
   }, []);
@@ -70,7 +68,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(newUser);
       
       // localStorage에 사용자 정보 저장
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
+      localStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(newUser));
       
       // 로그인 성공 토스트
       toast.success('로그인이 완료되었습니다!');
@@ -94,7 +92,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setError(null);
     
     // localStorage에서 사용자 정보 삭제
-    localStorage.removeItem(USER_STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEYS.USER_INFO);
   }, []);
 
   // 컨텍스트 값 정의
