@@ -1,5 +1,5 @@
 import { css } from '@emotion/react';
-import { useState } from 'react';
+import {useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { colors } from '../styles/colors';
 import { spacing } from '../styles/spacing';
@@ -33,17 +33,7 @@ const imgStyle = css({ objectFit: 'cover', borderRadius: 12 });
 const nameStyle = css({ marginTop: parseInt(spacing.spacing3), ...typography.body2Bold, color: colors.textDefault });
 const priceStyle = css({ marginTop: parseInt(spacing.spacing2), ...typography.body2Regular, color: colors.textDefault });
 const brandStyle = css({ marginTop: parseInt(spacing.spacing1), ...typography.label2Regular, color: colors.textSub });
-const buttonWrapStyle = css({ textAlign: 'center', marginTop: spacing.spacing6 });
-const moreBtnStyle = css({
-  margin: '0 auto',
-  padding: `${spacing.spacing2} ${spacing.spacing6}`,
-  borderRadius: 8,
-  border: 'none',
-  background: colors.gray200,
-  color: colors.gray900,
-  cursor: 'pointer',
-  ...typography.body2Bold,
-});
+
 const emptyStyle = css({
   display: 'flex',
   justifyContent: 'center',
@@ -61,11 +51,10 @@ interface ThemeProductGridProps {
   onLoadMore?: () => void;
 }
 
-const INITIAL_DISPLAY_COUNT = 10;
-
 const ThemeProductGrid = ({ products, loading = false, hasMore = false, onLoadMore }: ThemeProductGridProps) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
   // 상품 클릭 핸들러
   const handleProductClick = (productId: number) => {
@@ -75,6 +64,22 @@ const ThemeProductGrid = ({ products, loading = false, hasMore = false, onLoadMo
       navigate('/login', { state: { from: `/order/${productId}` } });
     }
   };
+
+  // 무한 스크롤 Intersection Observer
+  useEffect(() => {
+    if (!hasMore || loading) return;
+    const observer = new window.IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        onLoadMore && onLoadMore();
+      }
+    }, { threshold: 0.1 });
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+    return () => {
+      if (observerRef.current) observer.unobserve(observerRef.current);
+    };
+  }, [hasMore, loading, onLoadMore, products.length]);
 
   if (loading) {
     return (
@@ -99,35 +104,30 @@ const ThemeProductGrid = ({ products, loading = false, hasMore = false, onLoadMo
   return (
     <section css={sectionStyle}>
       <div css={gridStyle}>
-        {products.map((product, index) => (
-          <div
-            key={product.id}
-            css={cardStyle}
-            onClick={() => handleProductClick(product.id)}
-          >
-            <img
-              src={product.imageURL}
-              alt={product.name}
-              width={160}
-              height={120}
-              css={imgStyle}
-            />
-            <div css={nameStyle}>{product.name}</div>
-            <div css={priceStyle}>{product.price.sellingPrice.toLocaleString()}원</div>
-            <div css={brandStyle}>{product.brandInfo.name}</div>
-          </div>
-        ))}
+        {products.map((product, index) => {
+          const isLast = index === products.length - 1;
+          return (
+            <div
+              key={product.id}
+              css={cardStyle}
+              onClick={() => handleProductClick(product.id)}
+              ref={isLast && hasMore ? observerRef : undefined}
+            >
+              <img
+                src={product.imageURL}
+                alt={product.name}
+                width={160}
+                height={120}
+                css={imgStyle}
+              />
+              <div css={nameStyle}>{product.name}</div>
+              <div css={priceStyle}>{product.price.sellingPrice.toLocaleString()}원</div>
+              <div css={brandStyle}>{product.brandInfo.name}</div>
+            </div>
+          );
+        })}
       </div>
-      {hasMore && (
-        <div css={buttonWrapStyle}>
-          <button
-            onClick={onLoadMore}
-            css={moreBtnStyle}
-          >
-            더보기
-          </button>
-        </div>
-      )}
+      {/* 더보기 버튼은 무한스크롤로 대체, 필요시 유지 가능 */}
     </section>
   );
 };
