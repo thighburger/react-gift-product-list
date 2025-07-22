@@ -9,6 +9,7 @@ import OrderPage from '@/pages/OrderPage'
 import { AuthProvider } from '@/contexts/AuthContext'
 import AuthGuard from '@/components/AuthGuard'
 import PageWrapper from '@/components/PageWrapper'
+import ThemeProductsPage from '@/pages/ThemeProductsPage'
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
                 <OrderPage />
               </AuthGuard>
             } />
+            <Route path="/theme/:themeId" element={<ThemeProductsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </PageWrapper>

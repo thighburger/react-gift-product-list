@@ -6,6 +6,8 @@ import { typography } from '../styles/typography';
 import { useState, useEffect } from 'react';
 import { fetchCategories } from '../api/categoryApi';
 import type { CategoryItem } from '../types/category';
+import { spinnerStyle } from '@/styles/common';
+import { useNavigate } from 'react-router-dom';
 
 const sectionStyle = css({
   background: colors.backgroundDefault,
@@ -23,6 +25,7 @@ const listStyle = css({
 const itemStyle = css({
   textAlign: 'center',
   width: 80,
+  cursor: 'pointer', // 클릭 가능하게 커서 변경
 });
 
 const imgStyle = css({
@@ -35,25 +38,11 @@ const nameStyle = css({
   color: colors.textDefault,
 });
 
-const spinnerStyle = css({
-  border: '4px solid rgba(0, 0, 0, 0.1)',
-  borderTop: '4px solid #3498db',
-  borderRadius: '50%',
-  width: '40px',
-  height: '40px',
-  animation: 'spin 1s linear infinite',
-  //가운데에
-  display: 'inline-block',
-  '@keyframes spin': {
-    '0%': { transform: 'rotate(0deg)' },
-    '100%': { transform: 'rotate(360deg)' },
-  },
-});
-
 const CategoryList = () => {
   const [categoryData, setCategoryData] = useState<CategoryItem[]>([]); // 상태로 categoryData 관리
   const [loading, setLoading] = useState(true); // 로딩 상태 추가
   const [error, setError] = useState<string | null>(null); // 에러 상태 추가
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -90,7 +79,11 @@ const CategoryList = () => {
     <section css={sectionStyle}>
       <div css={listStyle}>
         {categoryData.map((item) => (
-          <div key={item.themeId} css={itemStyle}>
+          <div
+            key={item.themeId}
+            css={itemStyle}
+            onClick={() => navigate(`/theme/${item.themeId}`)}
+          >
             <img
               src={item.image}
               alt={item.name}
