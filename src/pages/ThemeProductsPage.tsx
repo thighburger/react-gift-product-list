@@ -59,7 +59,7 @@ const ThemeProductsPage = () => {
   useEffect(() => {
     const loadThemeInfo = async () => {
       if (!themeId) {
-        navigate('/', { replace: true });
+        setError('잘못된 접근입니다.');
         return;
       }
       try {
@@ -69,7 +69,7 @@ const ThemeProductsPage = () => {
       } catch (err: any) {
         console.error('테마 정보 로드 실패:', err);
         if (err.message === 'THEME_NOT_FOUND') {
-          navigate('/', { replace: true });
+          setError('존재하지 않는 테마입니다.');
           return;
         }
         setError('테마 정보를 불러오는데 실패했습니다.');
