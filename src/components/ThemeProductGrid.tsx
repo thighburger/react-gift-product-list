@@ -1,5 +1,6 @@
 import { css } from '@emotion/react';
-import { useRef, useEffect } from 'react';
+import { useCallback } from 'react';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { useNavigate } from 'react-router-dom';
 import { colors } from '../styles/colors';
 import { spacing } from '../styles/spacing';
@@ -54,8 +55,16 @@ interface ThemeProductGridProps {
 const ThemeProductGrid = ({ products, loading = false, hasMore = false, onLoadMore }: ThemeProductGridProps) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const observerRef = useRef<HTMLDivElement | null>(null);
-  const observerInstance = useRef<IntersectionObserver | null>(null);
+
+  // useInfiniteScroll 훅 사용
+  const onLoadMoreCallback = useCallback(() => {
+    if (onLoadMore) onLoadMore();
+  }, [onLoadMore]);
+  const observerRef = useInfiniteScroll<HTMLDivElement>({
+    loading,
+    hasMore,
+    onLoadMore: onLoadMoreCallback,
+  });
 
   // 상품 클릭 핸들러
   const handleProductClick = (productId: number) => {
@@ -66,31 +75,6 @@ const ThemeProductGrid = ({ products, loading = false, hasMore = false, onLoadMo
     }
   };
 
-  // 무한 스크롤 Intersection Observer
-  useEffect(() => {
-    if (!hasMore || loading) return;
-    if (observerInstance.current) observerInstance.current.disconnect();
-    observerInstance.current = new window.IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        onLoadMore && onLoadMore();
-        // observer 일시 해제 (중복 호출 방지)
-        observerInstance.current?.disconnect();
-      }
-    }, { threshold: 0.1 });
-    if (observerRef.current) {
-      observerInstance.current.observe(observerRef.current);
-    }
-    return () => {
-      observerInstance.current?.disconnect();
-    };
-  }, [hasMore, loading, onLoadMore, products.length]);
-
-  useEffect(() => {
-    // 상품이 추가되고 loading이 끝나면 observer를 다시 등록
-    if (!loading && hasMore && observerRef.current && observerInstance.current) {
-      observerInstance.current.observe(observerRef.current);
-    }
-  }, [loading, hasMore, products.length]);
 
   if (loading) {
     return (
