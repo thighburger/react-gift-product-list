@@ -60,7 +60,6 @@ export const fetchThemeProducts = async (
     const result: ThemeProductListResponse = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Error fetching theme products:', error);
     throw error;
   }
 };
