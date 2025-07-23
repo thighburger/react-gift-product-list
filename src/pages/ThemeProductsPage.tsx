@@ -106,7 +106,11 @@ const ThemeProductsPage = () => {
     setProductLoading(true);
     try {
       const result = await fetchThemeProducts(Number(themeId), cursor, 10);
-      setProducts(prev => [...prev, ...result.list]);
+      setProducts(prev => {
+        const ids = new Set(prev.map(p => p.id));
+        const newList = result.list.filter(p => !ids.has(p.id));
+        return [...prev, ...newList];
+      });
       setCursor(result.cursor);
       setHasMore(result.hasMoreList);
     } catch (err) {
