@@ -1,5 +1,6 @@
 import type { CategoryItem, CategoryResponse, ThemeInfo, ThemeInfoResponse } from '../types/category';
 import type { Product } from '../types/product';
+import { apiRequest } from './apiClient';
 
 // 카테고리 데이터 가져오기
 export const fetchCategories = async (): Promise<CategoryItem[]> => {
@@ -34,20 +35,23 @@ export const fetchThemeInfo = async (themeId: number): Promise<ThemeInfo> => {
   }
 };
 
-// 테마별 상품 목록 조회
+
+// 테마별 상품 목록 데이터 타입
+export interface ThemeProductList {
+  list: Product[];
+  cursor: number;
+  hasMoreList: boolean;
+}
+
 export interface ThemeProductListResponse {
-  data: {
-    list: Product[];
-    cursor: number;
-    hasMoreList: boolean;
-  }
+  data: ThemeProductList;
 }
 
 export const fetchThemeProducts = async (
   themeId: number,
   cursor: number = 0,
   limit: number = 10
-): Promise<{ list: Product[]; cursor: number; hasMoreList: boolean }> => {
+): Promise<ThemeProductList> => {
   try {
     const response = await fetch(`http://localhost:3000/api/themes/${themeId}/products?cursor=${cursor}&limit=${limit}`);
     if (!response.ok) {
