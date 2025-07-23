@@ -89,8 +89,7 @@ const ThemeProductGrid = ({ products, loading = false, hasMore = false, onLoadMo
     return (
       <section css={sectionStyle}>
         <div css={emptyStyle}>
-          <div>상품을 불러올 수 없습니다.</div>
-          <div>잠시 후 다시 시도해주세요.</div>
+          <div>등록된 상품이 없습니다.</div>
         </div>
       </section>
     );
