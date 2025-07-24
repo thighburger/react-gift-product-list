@@ -52,16 +52,12 @@ export const fetchThemeProducts = async (
   cursor: number = 0,
   limit: number = 10
 ): Promise<ThemeProductList> => {
-  try {
     const response = await fetch(`http://localhost:3000/api/themes/${themeId}/products?cursor=${cursor}&limit=${limit}`);
     if (!response.ok) {
       throw new Error('상품 목록을 가져오는 데 실패했습니다.');
     }
     const result: ThemeProductListResponse = await response.json();
     return result.data;
-  } catch (error) {
-    throw error;
-  }
 };
 
 
